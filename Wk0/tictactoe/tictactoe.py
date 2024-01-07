@@ -107,8 +107,10 @@ def terminal(board):
     count_x = sum(row.count(X) for row in board)
     count_o = sum(row.count(O) for row in board)
 
+    # if either player wins
     if winner(board) == X or winner(board) == O:
         return True
+    # draw
     elif count_x + count_o == 9:
         return True 
     else:
@@ -150,8 +152,7 @@ def minimax(board):
         return action
 
 
-    raise NotImplementedError
-
+# Functions for alpha beta pruning
 def max_value(board, alpha, beta):
     # the game has ended, there is nothing to maximize
 
@@ -165,10 +166,12 @@ def max_value(board, alpha, beta):
         value = min_value(result(board, action), alpha, beta)[0]
         alpha = max(alpha, value)
 
-        # best move
+        # save the best move
         if value > v:
             v = value
             move = action
+
+        # prune
         if alpha >= beta:
             break
     return v, move
@@ -187,16 +190,12 @@ def min_value(board, alpha, beta):
         value = max_value(result(board, action), alpha, beta)[0]
         beta = min(beta, value)
 
-        # best move
+        # save the best move
         if value < v:
             v = value
             move = action
 
+        # prune
         if alpha >= beta:
             break
     return v, move
-
-    # for action in actions(board):
-    #     v = min(v, max_value(result(board,action)))
-
-    # return v

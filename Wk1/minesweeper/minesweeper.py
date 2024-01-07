@@ -1,5 +1,6 @@
 import itertools
 import random
+import copy
 
 
 class Minesweeper():
@@ -197,77 +198,84 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+        
         self.moves_made.add(cell)
         self.mark_safe(cell)
 
         # generating neighbors
         neighbors = set()   
+
         for i in range(cell[0] - 1, cell[0] + 2):
             for j in range(cell[1] - 1, cell[1] + 2):
-                if (i,j) in self.mines or (i,j) in self.safes:
+
+                # if cell is a mine, update count and do not add to neighbors
+                if (i,j) in self.mines:
+                    count = count - 1
                     continue
-                if (i,j) == cell:
+
+                # if cell is a safe, do not add to neighbors
+                if (i,j) in self.safes:
                     continue
-                if 0 <= i < self.width and 0 <= j < self.height:
+
+                # if cell is not the original cell, and is within the boundaries of the game, add to neighbors
+                if (i,j) != cell and 0 <= i < self.height and 0 <= j < self.width:
                     neighbors.add((i,j))
+
         print('neighbors', neighbors)
-        # # removing known mines and safes from neighbours
-        # for n in neighbors:
-        #     if n in self.mines:
-        #         neighbors.remove(n)
-        #         count = count -1
-        #     elif n in self.safes:
-        #         neighbors.remove(n)
 
+        # adding new knowledge (only undetermined cells)
+        if len(neighbors) != 0:
+            new_k = Sentence(neighbors, count)
+            self.knowledge.append(new_k)
+            print('new sentence', new_k)
 
-
-        # adding new knowledge (only undeteremined cells)
-        new_k = Sentence(neighbors, count)
-        self.knowledge.append(new_k)
-        # print(new_k)
         added_new_knowledge = True
 
+        # if knowledge base is updated, try to make new inferences
         while added_new_knowledge == True:
-
+            added_new_knowledge = False
+            
             # updating safes and mines based on new sentence
+            new_safes = set()
+            new_mines = set()
 
-            while added_new_knowledge == True:
-                added_new_knowledge = False
-                new_safes = set()
-                new_mines = set()
+            # find all known safes and mines based on currrent knowledge
+            for k in self.knowledge:
+                new_safes.update(k.known_safes())
+                new_mines.update(k.known_mines())
 
-                for k in self.knowledge:
-                    new_safes = new_safes.union(k.known_safes())
-                    new_mines = new_mines.union(k.known_mines())
-                diff_safes = new_safes - self.safes
-                diff_mines = new_mines - self.mines
+            # extract new safes and mines (known but not yet added to AI)
+            new_safes.difference_update(self.safes)
+            new_mines.difference_update(self.mines)
 
-                if len(diff_safes) != 0:
-                    for s in diff_safes:
-                        self.mark_safe(s)
-                        added_new_knowledge = True
-                if len(diff_mines) != 0:
-                    for m in diff_mines:
-                        self.mark_mine(m)
-                        added_new_knowledge = True
+            # mark new safes and mines if they exist
+            # set added_new_knowledge to True so the AI can try to infer new knowledge based on newly marked safes and mines 
+            if len(new_safes) != 0:
+                for s in new_safes.copy():
+                    self.mark_safe(s)
+                added_new_knowledge = True
+            if len(new_mines) != 0:
+                for m in new_mines.copy():
+                    self.mark_mine(m)
+                added_new_knowledge = True
             
-            # sort sentences based on length of cells
-            self.knowledge.sort(key=lambda x: len(x.cells))
-            
-            # loop through all previous sentence to see if there is a subset
+            # remove empty sentences
+            self.knowledge = [k for k in self.knowledge if k != Sentence(set(), 0)]
+
+            # loop through all sentences to see if there is a subset
             for k1 in self.knowledge:
                 for k2 in self.knowledge:
-                    if k1.cells.issubset(k2.cells) and k1 != k2:
+                    if k1.cells.issubset(k2.cells) and k1.cells != k2.cells:
                         new_k_cells = k2.cells - k1.cells
                         new_k_count = k2.count - k1.count
                         new_sentence = Sentence(new_k_cells, new_k_count)
 
+                        # if sentence is not already in knowledge, add to knowledge
                         if new_sentence not in self.knowledge and len(new_sentence.cells) > 0:
                             self.knowledge.append(new_sentence)
+                            print('new sentence', new_sentence)
                             added_new_knowledge = True
-                
-        
-        # raise NotImplementedError
+
 
     def make_safe_move(self):
         """
@@ -279,7 +287,7 @@ class MinesweeperAI():
         and self.moves_made, but should not modify any of those values.
         """
         safe_moves = self.safes - self.moves_made
-        print('safe moves', safe_moves)
+
         if len(safe_moves) == 0:
             return None
         else:

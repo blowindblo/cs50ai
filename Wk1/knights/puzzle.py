@@ -86,18 +86,18 @@ knowledge3 = And(
     Or(CKnight, CKnave),
     Not(And(CKnight, CKnave)),
 
-
+    # If A says either 'Aknight' or 'Aknave', it means A says 'Aknight' becuase neither knight nor knave can say 'Aknave'
+    # Hence there is no added knowledge from A's statement
+    Biconditional(Or(AKnight, AKnave), Or(AKnight, AKnave)),
+    
     # B says "A said 'I am a knave'."
     Biconditional(BKnight, Biconditional(AKnight, AKnave)),
-    
-    # Biconditional(BKnight, And(Implication(AKnight, AKnave), Implication(AKnave, Not(AKnave)))),
-    # if B is a Knave, all we know is that A did not say "I am a knave". A could have said something else or nothing at all
-    # Biconditional(BKnave, Not(AKnave)),
 
-    # B's statement
+    # B says "C is a knave."
     # If B is a knight, his statement "C is a knave" has to be true and if C is a knave, then B told the truth and is thus a knight
     Biconditional(BKnight, CKnave),
-    # Biconditional(BKnave, CKnight),
+
+    # C says "A is a knight."
     # If C is a knight, his statement "A is a knight" has to be true and if A is a knight, then C told the truth and is thus a knight
     Biconditional(CKnight, AKnight),
     # Biconditional(CKnave, AKnave)

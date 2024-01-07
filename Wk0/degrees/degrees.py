@@ -94,6 +94,10 @@ def shortest_path(source, target):
 
     # TODO
 
+    # if path == 0, return empty list
+    if source == target:
+        return []
+
     # Initialise frontier and starting node
     start = Node(state=source, parent=None, action=None)
     frontier = QueueFrontier()
@@ -103,17 +107,16 @@ def shortest_path(source, target):
     explored = set()
 
     while True:
+        # if there are no paths
         if frontier.empty():
             return None
         
         # This node is being explored
         node = frontier.remove()
-        print(node.state)
-        
         explored.add(node.state)
 
         neighbors = neighbors_for_person(node.state)
-
+        
         # Check neighbours of the node
         # if neighbour is not the target and neighbour is not yet explored, add children to the frontier (to be explored)
         for movie, actor in neighbors:
@@ -127,29 +130,11 @@ def shortest_path(source, target):
                 solution.reverse()
                 return solution
 
+            # if actor is not yet explored and is also not in the frotntier to be explored, then add to frontier
             elif (not frontier.contains_state(actor) and actor not in explored):
                 new_node = Node(state=actor, parent=node, action=movie)
                 frontier.add(new_node)
-
-
-            # if not frontier.contains_state(actor) and actor not in explored: 
-            #     child = Node(state=actor, parent=node, action=movie)
-            #     if child.state == target:
-            #         solution = []
-            #         node = child
-
-            #         while node.parent is not None:
-            #             solution.append((node.action, node.state))
-            #             node = node.parent
-                        
-            #         solution.reverse()
-            #         return solution
                 
-            #     frontier.add(child)
-    
-
-    raise NotImplementedError
-
 
 def person_id_for_name(name):
     """
