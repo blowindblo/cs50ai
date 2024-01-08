@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+import copy
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -107,10 +108,49 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
+    # no. of keys (i.e. pages)
+    corpus_size = len(corpus)
 
+    # set up result dict
     results = dict.fromkeys(corpus.keys(), 1/len(corpus))
 
-    raise NotImplementedError
+
+    base_prob = (1 - damping_factor)/corpus_size
+
+
+    iterate = True
+    new_results = copy.deepcopy(results)
+
+    # iterate until it converages
+    while iterate == True:
+        print('iterating')
+        iterate = False
+
+        for main_page in corpus.keys():
+            # set first part of equation (base prob)
+            new_results[main_page] = base_prob
+            for link_page, links in corpus.items():
+                # if no links on page, randomly pick from all links in corpus 
+                if len(links) == 0:
+                    new_results[main_page] += damping_factor * (new_results[link_page] / len(corpus.keys()))
+                # if link_page has a link to main_page, randomly pick from all links from link_page
+                elif main_page in links:
+                    new_results[main_page] += damping_factor * (new_results[link_page] / len(links))
+
+        # normalize page ranks
+        factor = sum(new_results.values())
+        new_results = {page: (prob / factor) for page, prob in new_results.items()}
+
+        # Check for changes in page rank
+        for p in corpus.keys():
+            if abs(new_results[p] - results[p]) > 0.001:
+                iterate = True
+                break
+
+        # Create a copy to track changes later
+        results = copy.deepcopy(new_results)
+
+    return results
 
 
 if __name__ == "__main__":
