@@ -114,28 +114,27 @@ def iterate_pagerank(corpus, damping_factor):
     # set up result dict
     results = dict.fromkeys(corpus.keys(), 1/len(corpus))
 
-
+    # prob of landing on a random page in the corpus
     base_prob = (1 - damping_factor)/corpus_size
 
-
+    # create empty dictionary for new results
+    new_results = {}
     iterate = True
-    new_results = copy.deepcopy(results)
 
     # iterate until it converages
     while iterate == True:
         print('iterating')
         iterate = False
-
         for main_page in corpus.keys():
             # set first part of equation (base prob)
             new_results[main_page] = base_prob
             for link_page, links in corpus.items():
                 # if no links on page, randomly pick from all links in corpus 
                 if len(links) == 0:
-                    new_results[main_page] += damping_factor * (new_results[link_page] / len(corpus.keys()))
+                    new_results[main_page] += damping_factor * (results[link_page] / corpus_size)
                 # if link_page has a link to main_page, randomly pick from all links from link_page
                 elif main_page in links:
-                    new_results[main_page] += damping_factor * (new_results[link_page] / len(links))
+                    new_results[main_page] += damping_factor * (results[link_page] / len(links))
 
         # normalize page ranks
         factor = sum(new_results.values())
