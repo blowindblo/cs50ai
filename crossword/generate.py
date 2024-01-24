@@ -282,9 +282,29 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        while not assignment_complete:
-            var = self.select_unassigned_variable(assignment)
-            self.order_domain_values(var)
+        if self.assignment_complete(assignment):
+            return assignment
+
+        # select unassigned variable with the min no. of remaining values in domain
+        var = self.select_unassigned_variable(assignment)
+
+        # loop through each possible value in domain fo rthat variable
+        for value in self.order_domain_values(var):
+            # assign value to the unaassigned variable
+            assignment[var] = value
+            # if assignment is consistent, backtrack again (i.e. assigned another value ti another variable)
+            if self.consistent(assignment):
+                # recursive
+                # if successful, the final return value is assignment
+                result = self.backtrack(assignment)
+                if result:
+                    return result
+                
+            # if assignment is inconsistent (i.e. result is not assignment), remove variable from assignment
+            assignment.pop(var)
+
+        return None
+
 
 
 
