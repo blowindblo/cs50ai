@@ -3,6 +3,8 @@ import numpy as np
 import os
 import sys
 import tensorflow as tf
+import keras
+from keras import layers
 
 from sklearn.model_selection import train_test_split
 
@@ -91,7 +93,24 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    # using sequential model
+    model = keras.Sequential()
+    model.add(keras.Input(shape = (IMG_WIDTH, IMG_HEIGHT, 3)))
+    model.add(layers.Conv2D(filters = 8, kernel_size = 5,  activation = 'relu'))
+    model.add(layers.AveragePooling2D(pool_size=(2, 2)))        # pooling reduces size of output shape
+    model.add(layers.Conv2D(filters = 64, kernel_size = 3, activation = 'relu'))
+    model.add(layers.AveragePooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(filters = 128, kernel_size = 3, activation = 'relu'))
+    model.add(layers.AveragePooling2D(pool_size=(2, 2)))
+    model.add(layers.Flatten())     # transform to 1D array
+    model.add(layers.Dense(units = NUM_CATEGORIES, activation='softmax'))
+
+    model.summary()
+    model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+    return (model)
 
 
 if __name__ == "__main__":
