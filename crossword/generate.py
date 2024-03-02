@@ -289,7 +289,7 @@ class CrosswordCreator():
         var = self.select_unassigned_variable(assignment)
 
         # loop through each possible value in domain fo rthat variable
-        for value in self.order_domain_values(var):
+        for value in self.order_domain_values(var, assignment):
             # assign value to the unaassigned variable
             assignment[var] = value
             # if assignment is consistent, backtrack again (i.e. assigned another value ti another variable)
