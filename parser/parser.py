@@ -18,9 +18,10 @@ V -> "smiled" | "tell" | "were"
 
 NONTERMINALS = """
 S -> NP VP | S Conj S | NP VP Conj VP | NP VP Conj NP VP
-NP -> N | Det N | Det AP N | P NP | NP P NP
-VP -> V | Adv V | V Adv | VP NP | V NP Adv
+NP -> N | Det N | Det AP N | P NP | NP P NP | Det N PP | Det AP N PP | AP N PP | N PP
+VP -> V | Adv VP | VP Adv | V NP | VP Conj VP | V PP
 AP -> Adj | AP Adj
+PP -> P NP
 
 """
 
@@ -85,52 +86,25 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
+
+    # check nested substrees
+    np_subtree = list(tree.subtrees(lambda t: t.label() == 'NP'))
     chunks = []
-    
-    parent_tree = nltk.tree.ParentedTree.convert(tree)
 
+    # check each subtree
+    for t in np_subtree:
+        nested_subtree = list(t.subtrees(lambda st: st.label() == 'NP' and t != st))
+        # if list is empty (i.e. not NP subtrees)
+        # append t
+        if not nested_subtree:
+            chunks.append(t)
+            
+    return chunks
 
-    # for subtree in parent_tree.subtrees():
-    #     print(subtree)
-    #     if subtree.label() == 'N':
-    #         chunks.append(subtree.parent())
-    def np_search(tree):
-        # print(f' tree {tree} current np chunk {current_np_chunk}')
-        # loop through each child
-        for t in tree:
-            if t.label() == 'N':
-                chunks.append(t.parent())
-            elif t.label() == 'NP' and len(t) == 1:
-                chunks.append(t)
-            # elif t.label() == 'NP':
-            #     np_search(t)
-            elif isinstance(t, nltk.ParentedTree) and len(t) > 1:
-                # print(t)
-                np_search(t)
-    #     #     np_search(t)
-    #     #     print(f'current {t} {len(t)}')
-    #     #     # check that it's a tree with more than one children 
-    #     #     if isinstance(t, nltk.Tree) and len(t) > 1:
-    #     #         if t.label() == 'NP' or t.label() == 'S' or t.label() == 'VP':
-    #     #             current_np_chunk = t
-    #     #             print(f'This is NP. Search {t}')
-    #     #             np_subtree = np_search(t, current_np_chunk, np_subtree)
-    #     #         else:
-    #     #             print(f'Search {t}')
-    #     #             np_subtree = np_search(t, current_np_chunk, np_subtree)
-    #     # # if there are no subtrees that are NP, append to chunks and return True
-    #     # if not np_subtree and current_np_chunk != "":
-    #     #     print(f'add NP {current_np_chunk}')
-    #     #     print(f'{isinstance(current_np_chunk, nltk.Tree)}')
-    #     #     chunks.append(current_np_chunk)
-    #     #     print(f'{len(chunks)}')
-    #     #     print(chunks)
-    #     #     return True
-
-    np_search(parent_tree)
-    
-
-    return(chunks)
+    # return tree.subtrees(
+    #     lambda t: t.label() == 'NP' and
+    #     not list(t.subtrees(lambda st: t != st and st.label() == 'NP'))
+    # )
 
 if __name__ == "__main__":
     main()
